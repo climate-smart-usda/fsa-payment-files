@@ -6,7 +6,7 @@ Data were downloaded from the [FSA Farm Payment Files website](https://www.fsa.u
 
 The [FSA Farm Payment Files](https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/payment-files) were produced by the USDA Farm Service Agency and are in the Public Domain. Data in the [`fsa-payment-files`](/fsa-payment-files) directory were derived from the FSA Farm Payment Files by R. Kyle Bocinsky and are released under the [Creative Commons CCZero license](https://creativecommons.org/publicdomain/zero/1.0/). The [`fsa-payment-files.R`](/fsa-payment-files.R) script is copyright R. Kyle Bocinsky, and is released under the [MIT License](/LICENSE.md).
 
-This work was supported by grants from the National Oceanic and Atmospheric Administration, [National Integrated Drought Information System](https://www.drought.gov) (University Corporation for Atmospheric Research subaward SUBAWD000858), and but US Department of Agriculture Office of the Chief Economist (OCE), Office of Energy and Environmental Policy (OEEP) funds passed through to Research, Education, and Economics mission area (award 58-3070-3-016).
+This work was supported by grants from the National Oceanic and Atmospheric Administration, [National Integrated Drought Information System](https://www.drought.gov) (University Corporation for Atmospheric Research subaward SUBAWD000858), and by US Department of Agriculture Office of the Chief Economist (OCE), Office of Energy and Environmental Policy (OEEP) funds passed through to Research, Education, and Economics mission area (award 58-3070-3-016).
 
 Please contact Kyle Bocinsky ([kyle.bocinsky@umontana.edu](mailto:kyle.bocinsky@umontana.edu)) with any questions.
 
