@@ -148,19 +148,17 @@ if(update_payments){
   
 }
 
-# # Example accessing payment files on S3
-# # A map of 2024 FSA Payments by county
-# arrow::s3_bucket("climate-smart-usda/fsa-payment-files",
-#                    access_key = keyring::key_get("aws_access_key_id"),
-#                    secret_key = keyring::key_get("aws_secret_access_key")) %>%
-#   arrow::open_dataset() %>%
-#   dplyr::filter(`Accounting Program Year` == 2024) %>%
-#   dplyr::group_by(`FSA Code`) %>%
-#   dplyr::summarise(`Disbursement Amount` = sum(`Disbursement Amount`, na.rm = TRUE)) %>%
-#   dplyr::collect() %>%
-#   dplyr::left_join(
-#     sf::read_sf("FSA_Counties_dd17.gdb.zip"),
-#     by = c("FSA_STCOU" = "FSA Code"),
-#     .
-#   ) %>%
-#   mapview::mapview(zcol = "Disbursement Amount")
+# Example accessing payment files on S3
+# A map of 2024 FSA Payments by county
+arrow::s3_bucket("climate-smart-usda/fsa-payment-files") %>%
+  arrow::open_dataset() %>%
+  dplyr::filter(`Accounting Program Year` == 2024) %>%
+  dplyr::group_by(`FSA Code`) %>%
+  dplyr::summarise(`Disbursement Amount` = sum(`Disbursement Amount`, na.rm = TRUE)) %>%
+  dplyr::collect() %>%
+  dplyr::left_join(
+    sf::read_sf("FSA_Counties_dd17.gdb.zip"),
+    by = c("FSA_STCOU" = "FSA Code"),
+    .
+  ) %>%
+  mapview::mapview(zcol = "Disbursement Amount")
