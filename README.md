@@ -1,25 +1,113 @@
 
-# US Department of Agriculture Farm Service Agency Farm Payment Files, 2004–2024
-
-This repository is an archive of the US Department of Agriculture Farm
-Service Agency (FSA) [Farm Payment
+This repository provides a standardized archive of the US Department of
+Agriculture Farm Service Agency (FSA) [Farm Payment
 Files](https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/payment-files).
-FSA maintains records on payments made to agricultural program
-participants in electronic form. In response to public interest in this
-data, FSA makes it available on a public website and via a Freedom of
-Information Act (FOIA) request. Data on the website are available as
-multiple Microsoft Excel files per year, which are large and tedious to
-process. The script in this repository automates the process of
-downloading the data and appending them into a single large dataset,
-then writing the data as a partitioned Parquet dataset, which
-facilitates efficient analysis.
+These files contain detailed records of payments made to agricultural
+program participants, originally released as Microsoft Excel files.
+
+The included R script automates the discovery, download, and conversion
+of these files into a partitioned, analysis-ready format.
 
 ------------------------------------------------------------------------
 
-## 📍 Quick Start: Visualize a Normal Grazing Period Map in R
+## 📁 Repository Contents
 
-This snippet shows how to load the Normal Grazing Period file from the
-archive and create a simple map using `sf` and `ggplot2`.
+- `fsa-payment-files.R`: Main R script to download, extract, clean, and
+  write the payment files to a partitioned Parquet format.
+- `README.Rmd`: This file. Contains background information, usage
+  instructions, and archive structure.
+- `data-raw/`: Folder used for downloading and unpacking Excel and CSV
+  files.
+- `fsa-payment-files/`: Final output directory containing the processed
+  data as a Parquet dataset, partitioned by state and year.
+
+------------------------------------------------------------------------
+
+## 🔁 Processing Workflow
+
+The `fsa-payment-files.R` script performs the following steps:
+
+1.  **Discovery**: Scrapes the FSA payment files website to find
+    downloadable Excel files (2004–2024).
+2.  **Download**: Saves original files to `data-raw/`.
+3.  **Extraction**: Parses each Excel file, handling annual variation in
+    schema and formatting.
+4.  **Standardization**: Renames fields, standardizes formats (e.g.,
+    FIPS codes, program names), and removes duplicates.
+5.  **Archiving**: Writes the full dataset to the `fsa-payment-files/`
+    directory as partitioned Parquet files (`State FSA Name=` and
+    `Accounting Program Year=` directories).
+6.  **Upload** *(optional)*: Uses the AWS `paws` package to upload the
+    full Parquet archive to a public S3 bucket for remote access.
+
+------------------------------------------------------------------------
+
+## ☁️ Public Access via S3
+
+The full archive is hosted in a public Amazon S3 bucket:
+
+    s3://climate-smart-usda/fsa-payments/
+
+You can access the data directly using:
+
+### AWS CLI
+
+``` bash
+aws s3 ls s3://climate-smart-usda/fsa-payment-files/ --no-sign-request
+```
+
+### In R with `arrow` and `s3://` support
+
+``` r
+library(arrow)
+```
+
+    ## 
+    ## Attaching package: 'arrow'
+
+    ## The following object is masked from 'package:utils':
+    ## 
+    ##     timestamp
+
+``` r
+dataset <- 
+  open_dataset("s3://climate-smart-usda/fsa-payment-files/", 
+               filesystem = s3_bucket("climate-smart-usda", anonymous = TRUE))
+```
+
+------------------------------------------------------------------------
+
+## 🧭 Notes
+
+- File structure varies by year, and the script includes heuristics to
+  detect column shifts and missing headers.
+- Partitioning by state and year facilitates fast querying and
+  cloud-native workflows.
+- The processing script can be rerun to include new years as they are
+  released.
+
+------------------------------------------------------------------------
+
+## 📅 Update Schedule
+
+This dataset is refreshed annually after the USDA FSA releases new
+payment files, typically in the spring. Additional years or corrections
+may be processed as available.
+
+------------------------------------------------------------------------
+
+## 🔗 Related Resources
+
+- [USDA FSA FOIA Payment
+  Page](https://www.fsa.usda.gov/news-room/efoia/electronic-reading-room/frequently-requested-information/payment-files-information/index)
+- [Arrow and Parquet in R](https://arrow.apache.org/docs/r/)
+
+------------------------------------------------------------------------
+
+## 📍 Quick Start: Visualize data in the FSA Farm Payment Files in R
+
+This snippet shows how to load data from the Farm Payment Files archive
+and create a simple map using `sf` and `ggplot2`.
 
 ``` r
 # Load required libraries
@@ -45,7 +133,7 @@ lfp_payments <-
   dplyr::group_by(`FSA Code`) |>
   dplyr::summarise(
     `Disbursement Amount` = sum(`Disbursement Amount`, na.rm = TRUE)
-    ) |>
+  ) |>
   dplyr::collect()
 
 ## The Normal Grazing Period data files use FSA county definitions
@@ -67,8 +155,8 @@ lfp_payments_counties <-
   dplyr::mutate(
     `Disbursement Amount` = 
       tidyr::replace_na(`Disbursement Amount`, 0)
-    )
-  
+  )
+
 
 # Plot the map
 ggplot(counties) +
@@ -103,48 +191,70 @@ ggplot(counties) +
 
 ------------------------------------------------------------------------
 
-Data were downloaded from the [FSA Farm Payment Files
-website](https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/payment-files)
-and ingested into the [R statistical
-framework](https://www.r-project.org), were cleaned to a common set of
-fields, and then were written to a partitioned Parquet dataset available
-in the [`fsa-payment-files`](/fsa-payment-files) directory.
-[`fsa-payment-files.R`](/fsa-payment-files.R) is the R script that
-cleans the data and produces the Parquet dataset. The FSA uses slightly
-different county or county equivalent definitions for their service
-areas than the standard ANSI FIPS areas used by the US Census.
-Geospatial definitions of the FSA counties are included in the
-[`FSA_Counties_dd17.gdb.zip`](/FSA_Counties_dd17.gdb.zip) dataset; FSA
-county codes are detailed in [FSA Handbook
-1-CM](https://www.fsa.usda.gov/Internet/FSA_File/1-cm_r03_a80.pdf),
-Exhibit 101. The [`fsa-payment-files`](/fsa-payment-files) directory is
-also uploaded to a public Amazon AWS S3 bucket for ease of access.
+## 🧭 About FSA County Codes
 
-The [FSA Farm Payment
-Files](https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/electronic-reading-room/frequently-requested/payment-files)
-were produced by the USDA Farm Service Agency and are in the Public
-Domain. Data in the [`fsa-payment-files`](/fsa-payment-files) directory
-were derived from the FSA Farm Payment Files by R. Kyle Bocinsky and are
-released under the [Creative Commons CCZero
-license](https://creativecommons.org/publicdomain/zero/1.0/). The
-[`fsa-payment-files.R`](/fsa-payment-files.R) script is copyright R.
-Kyle Bocinsky, and is released under the [MIT License](/LICENSE.md).
+The USDA FSA uses custom county definitions that differ from standard
+ANSI/FIPS codes used by the U.S. Census. To align the Farm Payment Files
+with geographic boundaries, use the FSA-specific geospatial dataset
+archived in the companion repository:
 
-This work was supported by grants from the National Oceanic and
-Atmospheric Administration, [National Integrated Drought Information
-System](https://www.drought.gov) (University Corporation for Atmospheric
-Research subaward SUBAWD000858), and by US Department of Agriculture
-Office of the Chief Economist (OCE), Office of Energy and Environmental
-Policy (OEEP) funds passed through to Research, Education, and Economics
-mission area (award 58-3070-3-016).
+🔗
+[**climate-smart-usda/fsa-counties-dd17**](https://climate-smart-usda.github.io/fsa-counties-dd17/)
 
-Please contact Kyle Bocinsky (<kyle.bocinsky@umontana.edu>) with any
-questions.
+FSA county codes are documented in [FSA Handbook 1-CM, Exhibit
+101](https://www.fsa.usda.gov/Internet/FSA_File/1-cm_r03_a80.pdf).
 
-<br>
-<p align="center">
+------------------------------------------------------------------------
 
-<a href="https://climate.umt.edu" target="_blank">
-<img src="https://climate.umt.edu/assets/images/MCO_logo_icon_only.png" width="350" alt="The Montana Climate Office logo.">
-</a>
-</p>
+## 📜 Citation
+
+If using this data in published work, please cite:
+
+> USDA Farm Service Agency. *Farm Payment Files, 2004–2024*. Archived by
+> R. Kyle Bocinsky. Accessed via GitHub archive, YYYY.
+> <https://climate-smart-usda.github.io/fsa-payment-files/>
+
+------------------------------------------------------------------------
+
+## 📄 License
+
+- **Raw FSA Farm Payment Files data** (USDA): Public Domain (17 USC §
+  105)
+- **Processed data & scripts**: © R. Kyle Bocinsky, released under
+  [CC0](https://creativecommons.org/publicdomain/zero/1.0/) and [MIT
+  License](./LICENSE) as applicable
+
+------------------------------------------------------------------------
+
+## ⚠️ Disclaimer
+
+This dataset is archived for research and educational use only. It may
+not reflect current FSA payments and policy. Always consult your **local
+FSA office** for the latest program guidance.
+
+To locate your nearest USDA Farm Service Agency office, use the USDA
+Service Center Locator:
+
+🔗 [**USDA Service Center
+Locator**](https://offices.sc.egov.usda.gov/locator/app)
+
+------------------------------------------------------------------------
+
+## 👏 Acknowledgment
+
+This project is part of:
+
+**[*Enhancing Climate-smart Disaster Relief in FSA
+Programs*](https://www.ars.usda.gov/research/project/?accnNo=444612)**  
+Supported by USDA OCE/OEEP and USDA Climate Hubs  
+Prepared by the [Montana Climate Office](https://climate.umt.edu)
+
+------------------------------------------------------------------------
+
+## 📬 Contact
+
+**R. Kyle Bocinsky**  
+Director of Climate Extension  
+Montana Climate Office  
+📧 <kyle.bocinsky@umontana.edu>  
+🌐 <https://climate.umt.edu>
