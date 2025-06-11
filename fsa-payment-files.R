@@ -133,7 +133,7 @@ if(update_payments){
                full.names = TRUE,
                recursive = TRUE) %>%
     furrr::future_map(\(x){
-      tryCatch(aws_s3$put_object(Bucket = "climate-smart-usda",
+      tryCatch(aws_s3$put_object(Bucket = "sustainable-fsa",
                                  Body = x,
                                  Key = x,
                                  ChecksumSHA256 = file(x) %>% 
